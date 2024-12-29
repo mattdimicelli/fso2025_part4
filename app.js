@@ -1,32 +1,15 @@
-require('dotenv').config();
+const blogRouter = require('./controllers/blogs');
 const express = require('express');
 const app = express();
 const cors = require('cors');
 const mongoose = require('mongoose');
+const { mongoDbUri } = require('./utilities/config');
 
-const blogSchema = new mongoose.Schema({
-  title: String,
-  author: String,
-  url: String,
-  likes: Number
-});
-
-const Blog = mongoose.model('Blog', blogSchema);
-
-mongoose.connect(process.env.MONGODB_URI);
+mongoose.connect(mongoDbUri);
 
 app.use(cors());
 app.use(express.json());
+app.use(blogRouter);
 
-app.get('/api/blogs', async (req, res) => {
-  const blogs = await Blog.find({});
-  res.json(blogs);
-})
-
-app.post('/api/blogs', async (req, res) => {
-  const blog = new Blog(req.body);
-  const result = await blog.save();
-  res.status(201).json(result);
-})
 
 module.exports = app;
