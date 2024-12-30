@@ -1,9 +1,9 @@
-const app = require('../app');
-const supertest = require('supertest');
-const { test, describe, after, beforeEach, before } = require('node:test');
-const mongoose = require('mongoose');
-const Blog = require('../models/blog');
+const { test, describe, after, beforeEach } = require('node:test');
 const assert = require('assert');
+const supertest = require('supertest');
+const app = require('../app');
+const Blog = require('../models/blog');
+const mongoose = require('mongoose');
 
 const blogs = [
   {
@@ -43,52 +43,48 @@ const blogs = [
     likes: 2,
   }
 ]
+
 beforeEach(async () => {
   await Blog.deleteMany({});
-})
-test.skip('the return format is json', async() => {
-  await supertest(app).get('/api/blogs').expect('Content-Type', /application\/json/);
 });
 
-describe.skip('the number of blogs returned matches the number of blogs in the db', () => {
-  test('return three blogs', async () => {
-    const threeBlogs = blogs.slice(0, 3);
-    for (let i = 0; i < threeBlogs.length; i++) {
-      const blog = new Blog(threeBlogs[i]);
-      await blog.save();
-    }
-    const response = await supertest(app).get('/api/blogs');
-    assert.strictEqual(response.body.length, 3);
-  });
-});
-
-describe.skip('each blog has an "id" property', () => {
-  let dbBlogs;
-  before(async () => {
+describe('posting a blog', () => {
+  test('... will increase the blog count by one', async() => {
     for (let i = 0; i < blogs.length; i++) {
       const blog = new Blog(blogs[i]);
       await blog.save();
     }
+
+    const newBlog = {
+      title: "New blog",
+      author: "Matt Di Micelli",
+      url: "http://something.com",
+      likes: 7,
+    };
+    await supertest(app).post('/api/blogs').send(JSON.stringify(newBlog)).set('Content-Type', 'application/json');
     const response = await supertest(app).get('/api/blogs');
-    dbBlogs = response.body;
-  })
-  test('... which is non-null', async () => {
-    let allBlogsHaveIdProp = true;
-    dbBlogs.forEach(blog => {
-      if (!blog.hasOwnProperty('id') || blog.id === undefined || blog.id === null) {
-        allBlogsHaveIdProp = false;
-      }
-    });
-    assert.strictEqual(true, allBlogsHaveIdProp);
+    const dbBlogs = response.body;
+    assert.strictEqual(7, dbBlogs.length);
   });
-  test('... and unique', () => {
-    const ids = dbBlogs.map(blog => blog.id);
-    assert.strictEqual(true, new Set(ids).size === dbBlogs.length);
+
+  test('... will create a blog with matching data in the DB', async () => {
+    const newBlog = {
+      title: "New blog",
+      author: "Matt Di Micelli",
+      url: "http://something.com",
+      likes: 7,
+    };
+    await supertest(app).post('/api/blogs').send(JSON.stringify(newBlog)).set('Content-Type', 'application/json');
+    const response = await supertest(app).get('/api/blogs');
+    const dbNewBlog = response.body[0];
+    assert.strictEqual(dbNewBlog.title, newBlog.title);
+    assert.strictEqual(dbNewBlog.author, newBlog.author);
+    assert.strictEqual(dbNewBlog.url, newBlog.url);
+    assert.strictEqual(dbNewBlog.likes, newBlog.likes);
   });
 });
 
 
 after(async () => {
   await mongoose.connection.close();
-})
-
+});
