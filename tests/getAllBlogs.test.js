@@ -62,6 +62,32 @@ describe('the number of blogs returned matches the number of blogs in the db', (
   });
 });
 
+describe('each blog has an "id" property', () => {
+  let dbBlogs;
+  before(async () => {
+    for (let i = 0; i < blogs.length; i++) {
+      const blog = new Blog(blogs[i]);
+      await blog.save();
+    }
+    const response = await supertest(app).get('/api/blogs');
+    dbBlogs = response.body;
+  })
+  test('... which is non-null', async () => {
+    let allBlogsHaveIdProp = true;
+    dbBlogs.forEach(blog => {
+      if (!blog.hasOwnProperty('id') || blog.id === undefined || blog.id === null) {
+        allBlogsHaveIdProp = false;
+      }
+    });
+    assert.strictEqual(true, allBlogsHaveIdProp);
+  });
+  test('... and unique', () => {
+    const ids = dbBlogs.map(blog => blog.id);
+    assert.strictEqual(true, new Set(ids).size === dbBlogs.length);
+  });
+});
+
+
 after(async () => {
   await mongoose.connection.close();
 })
