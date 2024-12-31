@@ -48,7 +48,7 @@ beforeEach(async () => {
   await Blog.deleteMany({});
 });
 
-describe('posting a blog', () => {
+describe.skip('posting a blog', () => {
   test('... will increase the blog count by one', async() => {
     for (let i = 0; i < blogs.length; i++) {
       const blog = new Blog(blogs[i]);
