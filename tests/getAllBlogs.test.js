@@ -4,6 +4,7 @@ const { test, describe, after, beforeEach, before } = require('node:test');
 const mongoose = require('mongoose');
 const Blog = require('../models/blog');
 const assert = require('assert');
+const User = require('../models/user');
 
 const blogs = [
   {
@@ -45,12 +46,13 @@ const blogs = [
 ]
 beforeEach(async () => {
   await Blog.deleteMany({});
+  await User.deleteMany({});
 })
-test.skip('the return format is json', async() => {
+test('the return format is json', async() => {
   await supertest(app).get('/api/blogs').expect('Content-Type', /application\/json/);
 });
 
-describe.skip('the number of blogs returned matches the number of blogs in the db', () => {
+describe('the number of blogs returned matches the number of blogs in the db', () => {
   test('return three blogs', async () => {
     const threeBlogs = blogs.slice(0, 3);
     for (let i = 0; i < threeBlogs.length; i++) {
@@ -62,7 +64,7 @@ describe.skip('the number of blogs returned matches the number of blogs in the d
   });
 });
 
-describe.skip('each blog has an "id" property', () => {
+describe('each blog has an "id" property', () => {
   let dbBlogs;
   before(async () => {
     for (let i = 0; i < blogs.length; i++) {
@@ -86,6 +88,31 @@ describe.skip('each blog has an "id" property', () => {
     assert.strictEqual(true, new Set(ids).size === dbBlogs.length);
   });
 });
+
+test('each blogs user info will be returned', async () => {
+  let user = {
+    username: 'mdimicelli',
+    hash: '12345',
+    name: 'Matt',
+  };
+  user = new User(user);
+  await user.save();
+
+  let newBlog = {
+    title: "New blog",
+    author: "Matt Di Micelli",
+    url: "http://something.com",
+    likes: 7,
+    user: user.id,
+  };
+  newBlog = new Blog(newBlog);
+  await newBlog.save();
+
+  const response = await supertest(app).get('/api/blogs');
+  assert.strictEqual(response.body[0].user.username, 'mdimicelli');
+  assert.strictEqual(response.body[0].user.name, 'Matt');
+  assert.strictEqual(response.body[0].user.id, user.id);
+})
 
 
 after(async () => {

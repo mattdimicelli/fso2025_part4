@@ -7,7 +7,7 @@ const Blog = require('../models/blog');
 beforeEach(async () => {
   await Blog.deleteMany({});
 })
-describe.skip('a delete request to /api/blogs/:id', () => {
+describe('a delete request to /api/blogs/:id', () => {
   test('will return a 204 status code if the id supplied is valid and the resource is deleted', async () => {
     const newBlog = new Blog({
       title: "New blog",

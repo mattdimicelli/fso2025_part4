@@ -10,7 +10,7 @@ const assert = require('assert');
 beforeEach(async () => {
   await Blog.deleteMany({});
 })
-test.skip('can update the number of likes', async () => {
+test('can update the number of likes', async () => {
   const blog = new Blog({
     title: "New blog",
     author: "Matt Di Micelli",
@@ -23,7 +23,7 @@ test.skip('can update the number of likes', async () => {
   strictEqual(updatedBlog.body.likes, 8);
 });
 
-test.skip('if the number of likes is not a positive integer, will get 400 status code with an error msg', async() => {
+test('if the number of likes is not a positive integer, will get 400 status code with an error msg', async() => {
   const blog = new Blog({
     title: "New blog",
     author: "Matt Di Micelli",

@@ -4,6 +4,7 @@ const supertest = require('supertest');
 const app = require('../app');
 const Blog = require('../models/blog');
 const mongoose = require('mongoose');
+const User = require('../models/user');
 
 const blogs = [
   {
@@ -48,7 +49,7 @@ beforeEach(async () => {
   await Blog.deleteMany({});
 });
 
-describe.skip('posting a blog', () => {
+describe('posting a blog', () => {
   test('... will increase the blog count by one', async() => {
     for (let i = 0; i < blogs.length; i++) {
       const blog = new Blog(blogs[i]);
@@ -82,6 +83,38 @@ describe.skip('posting a blog', () => {
     assert.strictEqual(dbNewBlog.url, newBlog.url);
     assert.strictEqual(dbNewBlog.likes, newBlog.likes);
   });
+
+  test('... will cause any user from the db to be designated as its creator', async () => {
+    let user1 = {
+      name: 'Matt Di Micelli',
+      hash: 'ooglyboogly',
+      username: 'mdimicelli',
+    };
+    let user2 = {
+      name: 'Meri',
+      hash: 'ooglyboogly',
+      username: 'santaella',
+    };
+    user1 = new User(user1);
+    user2 = new User(user2);
+    await user1.save();
+    await user2.save();
+
+    const newBlog = {
+      title: "New blog",
+      author: "Matt Di Micelli",
+      url: "http://something.com",
+      likes: 7,
+    };
+    await supertest(app)
+      .post('/api/blogs')
+      .send(JSON.stringify(newBlog))
+      .set('Content-Type', 'application/json')
+      .expect(201)
+      .expect((res) => {
+        assert.ok(res.body.user);
+    })
+  })
 });
 
 
