@@ -6,11 +6,13 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 const { mongoDbUri } = require('./utilities/config');
 const loginRouter = require('./controllers/login');
+const { getToken } = require('./utilities/middleware');
 
 mongoose.connect(mongoDbUri);
 
 app.use(cors());
 app.use(express.json());
+app.use(getToken);
 app.use(blogRouter);
 app.use(userRouter);
 app.use(loginRouter);
