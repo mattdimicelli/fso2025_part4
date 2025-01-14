@@ -42,14 +42,27 @@ blogRouter.patch('/api/blogs/:id', async (req, res) => {
 });
 
 blogRouter.delete('/api/blogs/:id', async (req, res) => {
-  const id = req.params.id;
+  const decodedToken = jwt.verify(req.token, process.env.SECRET);
+  if (!decodedToken.id) {
+    return res.status(401).json({ error: 'token invalid' })
+  }
+
+  const blogId = req.params.id;
+
   try {
-    const deletedItem = await Blog.findByIdAndDelete(id);
-    if (deletedItem.id === id) {
-      res.status(204).end();
-    } else {
-      res.status(400).end();
+    const theBlog = await Blog.findById(blogId);
+    await theBlog.populate('user');
+    console.log('the blog', theBlog);
+    console.log('decoded token id', decodedToken.id);
+    if (theBlog.user.id === decodedToken.id) {
+      const deletedItem = await Blog.findByIdAndDelete(blogId);
+      if (deletedItem.id === blogId) {
+        res.status(204).end();
+      } else {
+        res.status(400).end();
+      }
     }
+
   } catch(e) {
     res.status(400).end();
   }
